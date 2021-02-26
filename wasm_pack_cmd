@@ -1,0 +1,1 @@
+exec wasm-pack build $1 --target web --out-name wasm --out-dir ./dist
