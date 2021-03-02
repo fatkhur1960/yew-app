@@ -1,17 +1,16 @@
-use crate::{
-    utils::{RouteEvent, RouteHandler, RouterAgent},
-    AppRoute,
-};
+use crate::routes::RouteHandler;
+use crate::utils::{RouteEvent, RouterAgent};
 use yew::prelude::*;
+use yew_router::prelude::Route;
 
 pub enum Msg {
-    UpdateRoute(String),
+    UpdateRoute(Route<bool>),
 }
 
 pub struct RouterView {
+    current_route: Route<bool>,
+    agent: Box<dyn Bridge<RouterAgent>>,
     handler: RouteHandler,
-    current_route: String,
-    _agent: Box<dyn Bridge<RouterAgent>>,
 }
 
 impl Component for RouterView {
@@ -24,9 +23,12 @@ impl Component for RouterView {
         agent.send(RouteEvent::GetCurrentRoute);
 
         Self {
+            agent,
             handler: RouteHandler::new(),
-            current_route: String::new(),
-            _agent: agent,
+            current_route: Route {
+                route: String::from("/"),
+                state: true,
+            },
         }
     }
 
@@ -40,7 +42,7 @@ impl Component for RouterView {
     }
 
     fn change(&mut self, _: Self::Properties) -> ShouldRender {
-        false
+        true
     }
 
     fn view(&self) -> Html {

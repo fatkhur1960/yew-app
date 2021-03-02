@@ -25,7 +25,15 @@
     "typescript": "^3.9.7",
     "yew-styles": "0.8.1"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.15.2",
+    "animate.css": "^4.1.1",
+    "bootstrap": "^4.6.0",
+    "fontawesome": "^5.6.3",
+    "jquery": "^3.5.1",
+    "popper": "^1.0.1",
+    "popper.js": "^1.16.1"
+  },
   "staticFiles": {
     "staticPath": [
       "./static"

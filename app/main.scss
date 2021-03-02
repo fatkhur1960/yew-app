@@ -1,0 +1,130 @@
+html,
+body {
+  font-family: 'Roboto', sans-serif !important;
+  color: #414141;
+  background: #f1f3f7;
+}
+
+.box-shadow {
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
+}
+
+a {
+  text-decoration: none;
+  border: none;
+  outline: none;
+  color: #6c757d !important;
+  transition: all 1s ease-in-out;
+
+  &:hover {
+    color: #444;
+  }
+}
+.login {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  overflow: auto;
+
+  .login-container {
+    width: 590px;
+
+    .app-logo {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin: 30px auto;
+
+      img {
+        width: 89px;
+      }
+    }
+
+    .login-form {
+      min-height: 430px;
+      width: 590px;
+      border-radius: 20px;
+      background-color: #ffffff;
+      padding: 23px 68px;
+      margin-bottom: 35px;
+
+      h1.login-title {
+        color: #414141;
+        font-size: 23px;
+        font-weight: 500;
+        letter-spacing: 0;
+        line-height: 34px;
+        text-align: center;
+        margin-top: 10px;
+        margin-bottom: 28px;
+      }
+
+      label {
+        font-weight: 300;
+        font-size: 14px;
+        line-height: 0.1em;
+        color: #797979;
+      }
+
+      input {
+        border-top: none;
+        border-right: none;
+        border-left: none;
+        border-bottom: 0.5px solid #cbd1df;
+        border-radius: 0;
+        padding: 10px 0;
+        line-height: 0.2em;
+
+        &:focus {
+          border-top: none;
+          border-right: none;
+          border-left: none;
+          border-bottom: 1px solid #327de4;
+          box-shadow: none;
+        }
+
+        &.form-control.is-valid,
+        &.form-control.is-invalid {
+          border-top: none;
+          border-right: none;
+          border-left: none;
+          border-width: 1px;
+          box-shadow: none;
+        }
+
+        &.form-control.is-valid {
+          border-bottom-color: #28a745;
+        }
+
+        &.form-control.is-invalid {
+          border-bottom-color: #dc3545;
+        }
+      }
+
+      button.btn {
+        display: block;
+        width: 300px;
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 500;
+        border-radius: 8px;
+        background-color: #327de4;
+        height: 42px;
+        margin: 30px auto;
+      }
+
+      .form-link {
+        text-align: center;
+        margin-top: 5px;
+
+        a {
+          display: block;
+          color: #327de4 !important;
+          font-weight: 400;
+          font-size: 14px;
+          line-height: 2.3em;
+        }
+      }
+    }
+  }
+}

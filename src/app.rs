@@ -1,24 +1,15 @@
-use crate::router::AppRoute;
+use crate::components::{Notification, Notify, RouterLink};
 use crate::router_view::RouterView;
-use crate::{
-    components::RouterLink,
-    views::{AboutView, HomeView},
-};
 use yew::prelude::*;
 
-register_routes![
-    route("/", HomeView),
-    route("/about", AboutView)
-];
-
-pub struct AppView {}
+pub struct AppView;
 
 impl Component for AppView {
     type Message = ();
     type Properties = ();
 
     fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-        Self {}
+        Self { }
     }
 
     fn update(&mut self, _: Self::Message) -> ShouldRender {
@@ -30,13 +21,23 @@ impl Component for AppView {
     }
 
     fn view(&self) -> Html {
+        let class = "nav-link";
         html! {
             <div class="wrapper">
-                <RouterLink to="/">{"Home"}</RouterLink>{" | "}
-                <RouterLink to="/blog">{"Blog"}</RouterLink>{" | "}
-                <RouterLink to="/about">{"About"}</RouterLink>{" | "}
-                <RouterLink to="/about/10">{"Contact"}</RouterLink>
-                <hr/>
+                <Notification />
+                // <navbar class="navbar navbar-expand-md fixed-top navbar-dark bg-dark">
+                //     <div class="container">
+                //         <RouterLink class="navbar-brand" to="/" exact=true>{"Cover"}</RouterLink>
+                //         <div class="navbar-collapse offcanvas-collapse" id="navbarsExampleDefault">
+                //             <ul class="navbar-nav ml-auto">
+                //                 <li class="nav-item"><RouterLink class=class exact=true to="/">{"Home"}</RouterLink></li>
+                //                 <li class="nav-item"><RouterLink class=class exact=true to="/projects">{"Projects"}</RouterLink></li>
+                //                 <li class="nav-item"><RouterLink class=class exact=true to="/about">{"About"}</RouterLink></li>
+                //                 <li class="nav-item"><RouterLink class=class to="/contact/10">{"Contact"}</RouterLink></li>
+                //             </ul>
+                //         </div>
+                //     </div>
+                // </navbar>
                 <RouterView/>
             </div>
         }

@@ -5,17 +5,6 @@ use yew::virtual_dom::VNode;
 use yew::{agent::Dispatcher, prelude::*};
 use yew_router::prelude::Route;
 
-pub struct YewRoute;
-
-impl YewRoute {
-    pub fn new(route: String, state: JsonValue) -> Route<JsonValue> {
-        Route {
-            route,
-            state,
-        }
-    }
-}
-
 pub struct RouterLink {
     props: Props,
     link: ComponentLink<Self>,
@@ -30,6 +19,8 @@ pub struct Props {
     pub class: String,
     #[prop_or_default]
     pub to: String,
+    #[prop_or_default]
+    pub exact: bool,
 }
 
 pub enum Msg {
@@ -66,10 +57,10 @@ impl Component for RouterLink {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::Clicked => {
-                let state = if let Some(value) = route_parser::parse("pattern", &self.props.to) {};
-                let route = YewRoute::new(self.props.to.clone(), serde_json::Value::Null);
-                self.router
-                    .send(RouteEvent::ChangeRoute(self.props.to.clone()));
+                self.router.send(RouteEvent::ChangeRoute(Route {
+                    route: self.props.to.clone(),
+                    state: self.props.exact,
+                }));
                 true
             }
         }

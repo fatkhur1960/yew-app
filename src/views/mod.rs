@@ -1,11 +1,17 @@
-mod home_view;
 mod about_view;
-pub use self::{home_view::HomeView, about_view::AboutView};
+mod blog_view;
+mod contact_view;
+mod home_view;
+use std::sync::{Arc, Mutex};
 
-use yew::prelude::*;
-use crate::JsonValue;
+pub use self::{
+    about_view::AboutView, blog_view::BlogView, contact_view::ContactView, home_view::HomeView,
+};
 
-#[derive(Properties, Clone, Default, Debug)]
+use crate::{JsonValue, utils::notif_agent::NotifAgent};
+use yew::{agent::Dispatcher, prelude::*};
+
+#[derive(Properties, PartialEq, Clone, Debug)]
 pub struct Props {
     #[prop_or_default]
     pub params: JsonValue,
