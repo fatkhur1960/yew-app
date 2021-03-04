@@ -1,13 +1,13 @@
+mod button;
 mod field;
 mod form;
 mod form_state;
-mod button;
+pub use button::Button;
 pub use field::Field;
 pub use form::Form;
-pub use button::Button;
 
+use std::str::FromStr;
 use validator::Validate;
-use std::{collections::HashMap, str::FromStr};
 
 pub(crate) struct FormField {
     pub field_name: String,
@@ -44,7 +44,7 @@ pub trait Model: FormValue + Default + Validate + PartialEq + Clone + 'static {
 
 pub fn split_field_path(field_path: &str) -> (&str, &str) {
     if let Some(index) = field_path.find(".") {
-        (&field_path[0..index], &field_path[index+1..])
+        (&field_path[0..index], &field_path[index + 1..])
     } else {
         (field_path, "")
     }

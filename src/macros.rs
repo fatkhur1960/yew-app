@@ -1,35 +1,17 @@
 #![allow(unused_macros)]
-
-/// Usage: register_routes[route(path, component_view)]
-macro_rules! register_routes {
-    ([ $(route($path:expr, $view:ident)),* ]) => {
-        use proc_macros::RouteHolder;
-        use std::collections::HashMap;
-        use crate::{views, utils::route_parser};
+macro_rules! redirect {
+    ($target:expr) => {
+        use crate::routes::ROUTE_HANDLER;
+        use crate::routes::{RouteEvent::ChangeRoute, RouterAgent};
+        use yew::agent::Dispatched;
         use yew_router::prelude::Route;
-        use yew_router::matcher::{MatcherSettings, RouteMatcher};
-        use yew::{Html, html};
 
-        lazy_static! {
-            static ref ROUTES: Vec<RouteMatcher> = {
-                let mut routes = Vec::new();
-                let setting = MatcherSettings::default();
-                add_route!(routes, setting, [$($path),*]);
-                routes
-            };
-        }
-
-        #[derive(RouteHolder, Debug, Clone)]
-        #[routes($($view=$path,)*)]
-        pub struct RouteHandler {
-            pub routes: Vec<RouteMatcher>,
-        }
-    };
-}
-
-macro_rules! add_route {
-    ($varname:ident, $setting:ident, [$($path:expr),*]) => {
-        $($varname.push(RouteMatcher::new($path, $setting).expect("invalid path"));)*
+        let mut router = RouterAgent::dispatcher();
+        let state = ROUTE_HANDLER.get_route_state($target);
+        router.send(ChangeRoute(Route {
+            route: $target.to_string(),
+            state,
+        }));
     };
 }
 

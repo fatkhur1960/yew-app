@@ -52,6 +52,15 @@ impl<T: Model> Form<T> {
         self.state.borrow().field(field_name).message.to_owned()
     }
 
+    pub fn field_error(&self, field_name: &str) -> &'static str {
+        let msg = self.state.borrow().field(field_name).message.to_owned();
+        if msg.len() > 0 {
+            return "field-error";
+        }
+
+        ""
+    }
+
     pub fn set_field_value(&mut self, field_name: &str, field_value: &str) {
         self.state_mut().set_field_value(field_name, field_value);
     }

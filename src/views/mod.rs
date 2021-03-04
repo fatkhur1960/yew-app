@@ -1,20 +1,10 @@
-mod about_view;
-mod blog_view;
+mod not_found;
+mod dashboard;
 mod contact_view;
-mod home_view;
-use std::sync::{Arc, Mutex};
+mod login;
+mod register;
 
 pub use self::{
-    about_view::AboutView, blog_view::BlogView, contact_view::ContactView, home_view::HomeView,
+    not_found::NotFound, dashboard::DashboardView, contact_view::ContactView, login::LoginView,
+    register::RegisterView,
 };
-
-use crate::{JsonValue, utils::notif_agent::NotifAgent};
-use yew::{agent::Dispatcher, prelude::*};
-
-#[derive(Properties, PartialEq, Clone, Debug)]
-pub struct Props {
-    #[prop_or_default]
-    pub params: JsonValue,
-    #[prop_or_default]
-    pub query: JsonValue,
-}

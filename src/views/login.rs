@@ -1,40 +1,34 @@
-use std::{
-    borrow::{Borrow, BorrowMut},
-    ops::DerefMut,
-};
-
+use serde::{Deserialize, Serialize};
+use yew::InputData;
 use yew::{
     agent::{Dispatched, Dispatcher},
     prelude::*,
     utils::document,
     Component,
 };
-use yew::{InputData, MouseEvent};
 use yewtil::future::LinkFuture;
-use yewtil::NeqAssign;
 
 use crate::{
-    components::{
-        forms::{Button, Field},
-        RouterLink,
-    },
-    forms::Form,
+    forms::{Button, Field, Form},
     models::{AccessToken, Login},
     service::AuthService,
     utils::{
-        notif_agent::{self, NotifAgent, NotifEvent},
-        RouteEvent, RouterAgent,
+        notif_agent::{NotifAgent, NotifEvent},
+        token,
     },
-    JsonValue, Notify,
+    AppRoute, Notify, RouterLink,
 };
 
-use super::Props;
+#[derive(Query, Debug, Clone, Serialize, Deserialize)]
+struct NextQuery {
+    pub next: Option<String>,
+}
 
-pub struct HomeView {
+pub struct LoginView {
     link: ComponentLink<Self>,
-    props: Props,
     form: Form<Login>,
     notif_agent: Dispatcher<NotifAgent>,
+    query: NextQuery,
 }
 
 pub enum Msg {
@@ -44,18 +38,22 @@ pub enum Msg {
     Unauthorized(String),
 }
 
-impl Component for HomeView {
+impl Component for LoginView {
     type Message = Msg;
-    type Properties = Props;
+    type Properties = ();
 
-    fn rendered(&mut self, _first_render: bool) {
-        document().set_title("Racta - Login")
+    fn rendered(&mut self, first_render: bool) {
+        document().set_title("Racta - Login");
+
+        if first_render && token::is_authenticated() {
+            redirect!("/");
+        }
     }
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
             link,
-            props,
+            query: NextQuery::new(),
             form: Form::new(Login {
                 ..Default::default()
             }),
@@ -88,8 +86,11 @@ impl Component for HomeView {
 
                 true
             }
-            Msg::Authorized(_) => {
+            Msg::Authorized(at) => {
+                token::set_token(Some(at.token));
                 self.form.processing(false);
+                let target = self.query.next.clone().unwrap_or("/".to_string());
+                redirect!(&target);
 
                 true
             }
@@ -102,8 +103,8 @@ impl Component for HomeView {
         }
     }
 
-    fn change(&mut self, props: Self::Properties) -> ShouldRender {
-        self.props.neq_assign(props)
+    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
+        true
     }
 
     fn view(&self) -> Html {
@@ -111,22 +112,22 @@ impl Component for HomeView {
             <main role="main" class="login animate__animated animate__fadeIn">
                 <div class="login-container">
                     <div class="app-logo">
-                        <img src="./images/racta.png"/>
+                        <img src="/images/racta.png"/>
                     </div>
                     <div class="login-form">
                         <h1 class="login-title">{"Login Your Account"}</h1>
                         <form>
                             <div class="form-group">
                                 <label for="email">{"Email"}</label>
-                                <Field<Login> input_type="text" form=&self.form field_name="email" oninput=self.link.callback(|_: InputData| Msg::Update) />
-                                <div class="invalid-feedback">
+                                <Field<Login> input_type="text" form=&self.form name="email" oninput=self.link.callback(|_: InputData| Msg::Update) />
+                                <div class=vec!["invalid-feedback", self.form.field_error("email")]>
                                     {&self.form.field_message("email")}
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label for="password">{"Password"}</label>
-                                <Field<Login> input_type="password" form=&self.form field_name="password" oninput=self.link.callback(|_: InputData| Msg::Update) />
-                                <div class="invalid-feedback">
+                                <Field<Login> input_type="password" form=&self.form name="password" oninput=self.link.callback(|_: InputData| Msg::Update) />
+                                <div class=vec!["invalid-feedback", self.form.field_error("password")]>
                                     {&self.form.field_message("password")}
                                 </div>
                             </div>
@@ -138,8 +139,8 @@ impl Component for HomeView {
                                 />
                             </div>
                             <div class="form-link">
-                                <RouterLink to="/register" exact=true>{"Create new Account"}</RouterLink>
-                                <RouterLink to="/reset-password" exact=true>{"Reset Password"}</RouterLink>
+                                <RouterLink to=AppRoute::Register>{"Create new Account"}</RouterLink>
+                                <RouterLink to=AppRoute::ResetPassword>{"Reset Password"}</RouterLink>
                             </div>
                         </form>
                     </div>

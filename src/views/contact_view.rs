@@ -1,37 +1,30 @@
 use serde::{Deserialize, Serialize};
 use yew::{prelude::*, utils::document};
 
-use crate::{JsonValue, utils::route_parser::from_str};
-
-use super::Props;
-
-#[derive(Default, Serialize, Deserialize)]
-struct Params {
+#[derive(Params, Default, Serialize, Deserialize)]
+struct NameParam {
     pub name: String,
 }
 
 pub struct ContactView {
     _link: ComponentLink<Self>,
-    props: Props,
-    params: Params,
+    params: NameParam,
 }
 
 pub enum Msg {}
 
 impl Component for ContactView {
     type Message = Msg;
-    type Properties = Props;
+    type Properties = ();
 
     fn rendered(&mut self, _first_render: bool) {
         document().set_title(&format!("Project - {}", self.params.name))
     }
 
-    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        let params = serde_json::from_value(props.clone().params).unwrap_or_default();
+    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
             _link: link,
-            props,
-            params,
+            params: NameParam::new(),
         }
     }
 

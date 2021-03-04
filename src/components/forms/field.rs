@@ -14,38 +14,54 @@ fn default_text() -> String {
 pub struct FieldProperties<T: Model> {
     #[prop_or_else(default_text)]
     pub input_type: String,
-    pub field_name: String,
+    pub name: String,
     pub form: Form<T>,
     #[prop_or_else(String::new)]
     pub placeholder: String,
     #[prop_or_else(Callback::noop)]
     pub oninput: Callback<InputData>,
+    #[prop_or_default]
+    pub maxlength: Option<i32>,
 }
 
 pub struct Field<T: Model> {
     link: ComponentLink<Self>,
     pub input_type: String,
-    pub field_name: String,
+    pub name: String,
     pub form: Form<T>,
     pub placeholder: String,
     pub oninput: Callback<InputData>,
+    pub maxlength: Option<i32>,
 }
 
 impl<T: Model> Field<T> {
     pub fn field_name(&self) -> &str {
-        &self.field_name
+        &self.name
     }
 
     pub fn class(&self) -> &'static str {
         let s = self.form.state();
-        let field = s.field(&self.field_name);
+        let field = s.field(&self.name);
 
         if field.dirty && field.valid {
-            "form-control is-valid"
+            "form-control"
         } else if field.dirty {
             "form-control is-invalid"
         } else {
             "form-control"
+        }
+    }
+
+    pub fn class2(&self) -> &'static str {
+        let s = self.form.state();
+        let field = s.field(&self.name);
+
+        if field.dirty && field.valid {
+            "field-length"
+        } else if field.dirty {
+            "field-length is-invalid"
+        } else {
+            "field-length"
         }
     }
 
@@ -58,11 +74,11 @@ impl<T: Model> Field<T> {
     }
 
     pub fn dirty(&self) -> bool {
-        self.form.state().field(&self.field_name).dirty
+        self.form.state().field(&self.name).dirty
     }
 
-    pub fn set_field(&mut self, field_name: &str, value: &str) {
-        self.form.set_field_value(field_name, value)
+    pub fn set_field(&mut self, name: &str, value: &str) {
+        self.form.set_field_value(name, value)
     }
 }
 
@@ -74,10 +90,11 @@ impl<T: Model> Component for Field<T> {
         let mut form_field = Self {
             link,
             input_type: String::from(props.input_type),
-            field_name: String::from(props.field_name),
+            name: String::from(props.name),
             form: props.form,
             placeholder: String::from(props.placeholder),
             oninput: props.oninput,
+            maxlength: props.maxlength,
         };
 
         if form_field.input_type == "" {
@@ -91,8 +108,8 @@ impl<T: Model> Component for Field<T> {
         match msg {
             FieldMessage::OnInput(input_data) => {
                 let mut state = self.form.state_mut();
-                state.set_field_value(&self.field_name, &input_data.value);
-                state.update_validation_field(&self.field_name);
+                state.set_field_value(&self.name, &input_data.value);
+                state.update_validation_field(&self.name);
                 drop(state);
 
                 self.oninput.emit(input_data);
@@ -106,15 +123,35 @@ impl<T: Model> Component for Field<T> {
     }
 
     fn view(&self) -> Html {
+        let maxlength = self
+            .maxlength
+            .map(|a| format!("{}", a))
+            .unwrap_or(String::new());
+        let value = self.form.field_value(&self.name);
         html! {
-            <input
-                class=self.class()
-                id=self.field_name
-                type=self.input_type
-                placeholder=self.placeholder
-                value=self.form.field_value(&self.field_name)
-                oninput=self.link.callback(|e: InputData| FieldMessage::OnInput(e))
-            />
+            <div class="input">
+                <input
+                    class=self.class()
+                    id=self.name
+                    type=self.input_type
+                    placeholder=self.placeholder
+                    value=value
+                    name=&self.name
+                    oninput=self.link.callback(|e: InputData| FieldMessage::OnInput(e))
+                    maxlength=maxlength
+                />
+                {
+                    if self.maxlength.is_some() {
+                        html !{
+                            <div class=self.class2()>
+                                <span>{format!("{}/{}",&value.len(),self.maxlength.unwrap())}</span>
+                            </div>
+                        }
+                    } else{
+                        html! {}
+                    }
+                }
+            </div>
         }
     }
 }

@@ -1,19 +1,51 @@
-use crate::components::{Notification, Notify, RouterLink};
-use crate::router_view::RouterView;
+use crate::{
+    components::{Notification, RouterLink},
+    routes::{AppRouteState, RouterAgent},
+    utils::token,
+};
+use crate::{router_view::RouterView, routes::RouteEvent, AppRoute};
 use yew::prelude::*;
+use yew_router::prelude::Route;
 
-pub struct AppView;
+pub struct AppView {
+    state: AppRouteState,
+    agent: Box<dyn Bridge<RouterAgent>>,
+}
+
+pub enum Msg {
+    UpdateRoute(Route<AppRouteState>),
+}
 
 impl Component for AppView {
-    type Message = ();
+    type Message = Msg;
     type Properties = ();
 
-    fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-        Self { }
+    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let callback = link.callback(Msg::UpdateRoute);
+        let mut agent = RouterAgent::bridge(callback);
+        agent.send(RouteEvent::GetCurrentRoute);
+
+        Self {
+            agent,
+            state: AppRouteState {
+                auth: true,
+                navbar: true,
+                sidebar: true,
+            },
+        }
     }
 
-    fn update(&mut self, _: Self::Message) -> ShouldRender {
-        true
+    fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        match msg {
+            Msg::UpdateRoute(route) => {
+                let next = route.to_string();
+                self.state = route.state;
+
+                token::auth_middleware(self.state.auth, "/login", Some(next));
+
+                true
+            }
+        }
     }
 
     fn change(&mut self, _props: Self::Properties) -> ShouldRender {
@@ -21,24 +53,30 @@ impl Component for AppView {
     }
 
     fn view(&self) -> Html {
-        let class = "nav-link";
         html! {
             <div class="wrapper">
                 <Notification />
-                // <navbar class="navbar navbar-expand-md fixed-top navbar-dark bg-dark">
-                //     <div class="container">
-                //         <RouterLink class="navbar-brand" to="/" exact=true>{"Cover"}</RouterLink>
-                //         <div class="navbar-collapse offcanvas-collapse" id="navbarsExampleDefault">
-                //             <ul class="navbar-nav ml-auto">
-                //                 <li class="nav-item"><RouterLink class=class exact=true to="/">{"Home"}</RouterLink></li>
-                //                 <li class="nav-item"><RouterLink class=class exact=true to="/projects">{"Projects"}</RouterLink></li>
-                //                 <li class="nav-item"><RouterLink class=class exact=true to="/about">{"About"}</RouterLink></li>
-                //                 <li class="nav-item"><RouterLink class=class to="/contact/10">{"Contact"}</RouterLink></li>
-                //             </ul>
-                //         </div>
-                //     </div>
-                // </navbar>
-                <RouterView/>
+                {
+                    if self.state.navbar {
+                        html! {
+                            <navbar class="navbar navbar-expand-md fixed-top navbar-dark bg-dark">
+                                <div class="container">
+                                    <RouterLink class="navbar-brand" to=AppRoute::Dashboard>{"Cover"}</RouterLink>
+                                    <div class="navbar-collapse offcanvas-collapse" id="navbarsExampleDefault">
+                                        <ul class="navbar-nav ml-auto">
+                                            <li class="nav-item">
+                                                <RouterLink class="nav-link" to=AppRoute::Dashboard>{"Home"}</RouterLink>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </navbar>
+                        }
+                    } else {
+                        html! {}
+                    }
+                }
+                <RouterView default_route=AppRoute::Dashboard/>
             </div>
         }
     }

@@ -1,9 +1,7 @@
-use crate::utils::{RouteEvent, RouterAgent};
-use crate::{utils::route_parser, JsonValue};
+use crate::{AppRoute, routes::{RouteEvent::ChangeRoute, RouterAgent}};
 use yew::events::MouseEvent;
 use yew::virtual_dom::VNode;
 use yew::{agent::Dispatcher, prelude::*};
-use yew_router::prelude::Route;
 
 pub struct RouterLink {
     props: Props,
@@ -11,16 +9,13 @@ pub struct RouterLink {
     router: Dispatcher<RouterAgent>,
 }
 
-#[derive(Properties, Clone, Default, Debug)]
+#[derive(Properties, Clone, Debug)]
 pub struct Props {
     #[prop_or_default]
     pub children: Children,
     #[prop_or_default]
     pub class: String,
-    #[prop_or_default]
-    pub to: String,
-    #[prop_or_default]
-    pub exact: bool,
+    pub to: AppRoute,
 }
 
 pub enum Msg {
@@ -32,7 +27,7 @@ impl Component for RouterLink {
     type Message = Msg;
 
     fn view(&self) -> Html {
-        let target: &str = self.props.to.as_str();
+        let target: &str = &self.props.to.to_string();
         let class = self.props.class.clone();
         let cb = self.link.callback(|event: MouseEvent| {
             event.prevent_default();
@@ -57,10 +52,8 @@ impl Component for RouterLink {
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
             Msg::Clicked => {
-                self.router.send(RouteEvent::ChangeRoute(Route {
-                    route: self.props.to.clone(),
-                    state: self.props.exact,
-                }));
+                let route = self.props.to.clone();
+                self.router.send(ChangeRoute(route.into()));
                 true
             }
         }

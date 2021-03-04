@@ -1,7 +1,5 @@
-use std::{borrow::Borrow, ops::DerefMut};
+use super::{ApiError, ApiResult, Result};
 
-use super::{ApiError, ApiResult, LocalStorage, Result};
-use chrono::NaiveDateTime;
 use reqwest_wasm::{
     header::{self, HeaderMap, HeaderValue},
     Client, ClientBuilder, StatusCode,
@@ -14,9 +12,6 @@ pub struct ApiClient {
     scope: Option<String>,
     headers: HeaderMap,
 }
-
-use load_dotenv::try_load_dotenv;
-try_load_dotenv!();
 
 impl ApiClient {
     pub fn new() -> Self {

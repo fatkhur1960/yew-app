@@ -1,34 +1,39 @@
-use crate::routes::RouteHandler;
-use crate::utils::{RouteEvent, RouterAgent};
+use crate::routes::{AppRouteHandler, RouteEvent, RouterAgent};
+use crate::{
+    routes::{AppRouteState, ROUTE_HANDLER},
+    AppRoute,
+};
 use yew::prelude::*;
 use yew_router::prelude::Route;
 
 pub enum Msg {
-    UpdateRoute(Route<bool>),
+    UpdateRoute(Route<AppRouteState>),
 }
 
 pub struct RouterView {
-    current_route: Route<bool>,
+    current_route: Route<AppRouteState>,
     agent: Box<dyn Bridge<RouterAgent>>,
-    handler: RouteHandler,
+    handler: AppRouteHandler,
+}
+
+#[derive(Properties, Clone, Debug)]
+pub struct Props {
+    pub default_route: AppRoute,
 }
 
 impl Component for RouterView {
     type Message = Msg;
-    type Properties = ();
+    type Properties = Props;
 
-    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let callback = link.callback(Msg::UpdateRoute);
         let mut agent = RouterAgent::bridge(callback);
         agent.send(RouteEvent::GetCurrentRoute);
 
         Self {
             agent,
-            handler: RouteHandler::new(),
-            current_route: Route {
-                route: String::from("/"),
-                state: true,
-            },
+            handler: ROUTE_HANDLER.clone(),
+            current_route: props.default_route.into(),
         }
     }
 
@@ -46,6 +51,7 @@ impl Component for RouterView {
     }
 
     fn view(&self) -> Html {
-        self.handler.render_view(self.current_route.clone())
+        let route = self.current_route.clone();
+        self.handler.render_view(route)
     }
 }

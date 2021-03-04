@@ -5,136 +5,82 @@ extern crate syn;
 extern crate quote;
 
 use proc_macro::TokenStream;
-use proc_macro2::{Ident, Span, TokenStream as TokenStream2, TokenTree};
+use proc_macro2::{Ident, Span, TokenStream as TokenStream2};
 use quote::ToTokens;
 use std::iter::FromIterator;
-use syn::{parse_macro_input, DeriveInput, Lit};
+use syn::{parse_macro_input, DataEnum, DeriveInput};
 
-#[derive(Default, Debug, Clone)]
-struct VarAttribute {
-    pub path: String,
-    pub view: String,
-}
-
-#[proc_macro_attribute]
-pub fn use_middleware(attrs: TokenStream, input: TokenStream) -> TokenStream {
-    // let input_cloned = input.clone();
-    // let input: DeriveInput = parse_macro_input!(input_cloned as DeriveInput);
-    // let struct_name = &input.ident;
-
-    // dbg!(&input);
-
-    // if let syn::Data::Struct(_) = input.data {
-
-    // } else {
-    //     panic!("#[derive(Middleware)] can only be used with structs");
-    // }
-    
-    // let ts = quote!{
-    // };
-    dbg!(&attrs);
-
-    input
-}
-
-#[proc_macro_derive(RouteHolder, attributes(routes, views))]
-pub fn route_parser(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(Query)]
+pub fn parse_queryst(input: TokenStream) -> TokenStream {
     let input: DeriveInput = parse_macro_input!(input as DeriveInput);
     let name = input.ident;
 
-    let mut views: Vec<String> = Vec::new();
-    let mut paths: Vec<String> = Vec::new();
-
-    if let Some(attr) = input.attrs.into_iter().find(|a| a.path.is_ident("routes")) {
-        for token in attr.tokens {
-            if let TokenTree::Group(group) = token {
-                for item in group.stream() {
-                    if let TokenTree::Group(group) = item {
-                        for inner in group.stream() {
-                            if let TokenTree::Ident(ident) = &inner {
-                                views.push(ident.to_string());
-                            }
-                            if let TokenTree::Literal(lit) = &inner {
-                                if let Lit::Str(str) = Lit::new(lit.clone()) {
-                                    paths.push(str.value());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    match input.data {
+        syn::Data::Struct(_) => (),
+        _ => panic!("#[derive(Query)] can only be used with structs"),
     }
 
-    let routes = paths
-        .into_iter()
-        .zip(views.into_iter())
-        .collect::<Vec<(String, String)>>();
+    let output = quote! {
+        use yew_router::prelude::RouteService;
+        use crate::{utils::route_parser, JsonValue};
 
-    let tts = {
-        let mut arms: Vec<TokenStream2> = vec![];
-        let mut middleware = vec![];
-        for (path, view) in routes.into_iter() {
-            let view = Ident::new(&view, Span::call_site());
-            arms.push(quote! {
-                #path => html!{ <views::#view params=params/> },
-            });
+        impl #name {
+            pub fn new() -> Self {
+                let query: #name = serde_json::from_value(Self::parsed_query()).unwrap();
 
-            middleware.push(quote! {
-                impl Middleware for views::#view {
-                    fn before_enter(from: Route, to: Route, next: fn() -> Route) -> Route {
-                        console_log!("from {} to {}", from.to_string(), to.to_string());
-                        next()
-                    }
-                }
-            });
-        }
-        let match_arms = TokenStream2::from_iter(arms.into_iter());
-
-        let inner = quote! {
-            use crate::middleware::Middleware;
-            
-            impl #name {
-                pub fn new() -> Self {
-                    let except: RouteMatcher = RouteMatcher::new("/", MatcherSettings::default()).unwrap();
-                    let routes = ROUTES
-                        .clone()
-                        .into_iter()
-                        .filter(|a| *a != except)
-                        .collect();
-
-                    #name {
-                        routes,
-                    }
-                }
-
-                pub fn render_view(&self, input: Route<bool>) -> Html {
-                    let default = (input.to_string(), serde_json::Value::Null);
-                    let (path, params) = if input.state {
-                        default
-                    } else {
-                        match route_parser::parse(&input, self.routes.clone()) {
-                            Some(result) => result,
-                            None => default,
-                        }
-                    };
-
-                    match path.as_ref() {
-                        #match_arms
-                        _ => html! {
-                            <h1>{"Page not found"}</h1>
-                        }
-                    }
-                }
+                query
             }
-        };
 
-        let mut output = TokenStream2::from_iter(middleware);
-        output.extend(inner);
-        output
+            /// get current query string
+            fn parsed_query() -> JsonValue {
+                let rs: RouteService<bool> = RouteService::new();
+                let raw_qs = rs.get_query();
+
+                route_parser::parse_queryst(&raw_qs)
+            }
+        }
     };
 
-    TokenStream::from(tts)
+    output.into()
+}
+
+#[proc_macro_derive(Params)]
+pub fn parse_params(input: TokenStream) -> TokenStream {
+    let input: DeriveInput = parse_macro_input!(input as DeriveInput);
+    let name = input.ident;
+
+    match input.data {
+        syn::Data::Struct(_) => (),
+        _ => panic!("#[derive(Params)] can only be used with structs"),
+    }
+
+    let output = quote! {
+        use yew_router::prelude::RouteService;
+        use crate::utils::route_parser;
+        use crate::routes::AppRouteHandler;
+        use crate::JsonValue;
+
+        impl #name {
+            pub fn new() -> Self {
+                let param: #name = serde_json::from_value(Self::parsed_params()).unwrap();
+                param
+            }
+
+            /// get current path params
+            fn parsed_params() -> JsonValue {
+                let rs: RouteService<bool> = RouteService::new();
+                let rh = AppRouteHandler::new();
+                let path = rs.get_route().to_string();
+
+                match route_parser::parse(&path, rh.get_routes()) {
+                    Some((_, params)) => params,
+                    None => serde_json::Value::Null,
+                }
+            }
+        }
+    };
+
+    output.into()
 }
 
 #[proc_macro_derive(Model)]
@@ -226,4 +172,242 @@ pub fn derive_model(input: TokenStream) -> TokenStream {
     };
 
     impl_ast.into()
+}
+
+#[derive(Debug)]
+struct RouteMeta {
+    pub name: String,
+    pub path: String,
+    pub view: String,
+    pub auth: bool,
+    pub navbar: bool,
+    pub sidebar: bool,
+}
+
+#[proc_macro_derive(RouteDerive, attributes(params))]
+pub fn derive_route(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let enum_ident = input.ident;
+
+    let mut routes: Vec<RouteMeta> = vec![];
+    let mut variant_checker_functions = TokenStream2::new();
+
+    match input.data {
+        syn::Data::Enum(DataEnum { variants, .. }) => {
+            for var in variants.into_iter() {
+                let ident = var.ident;
+                let (mut path, mut view, mut auth, mut navbar, mut sidebar) =
+                    (String::new(), String::new(), false, true, true);
+                if let Some(attr) = var.attrs.into_iter().find(|a| a.path.is_ident("params")) {
+                    let parsed_meta = attr.parse_meta().unwrap();
+                    if let syn::Meta::List(list) = parsed_meta {
+                        for item in list.nested {
+                            if let syn::NestedMeta::Meta(meta) = item {
+                                match meta {
+                                    syn::Meta::Path(_) => {}
+                                    syn::Meta::List(_) => {}
+                                    syn::Meta::NameValue(value) => {
+                                        if value.path.is_ident("path") {
+                                            if let syn::Lit::Str(val) = value.lit {
+                                                path = val.value();
+                                            }
+                                        } else if value.path.is_ident("view") {
+                                            if let syn::Lit::Str(val) = value.lit {
+                                                view = val.value();
+                                            }
+                                        } else if value.path.is_ident("auth") {
+                                            if let syn::Lit::Bool(val) = value.lit {
+                                                auth = val.value;
+                                            }
+                                        } else if value.path.is_ident("navbar") {
+                                            if let syn::Lit::Bool(val) = value.lit {
+                                                navbar = val.value;
+                                            }
+                                        } else if value.path.is_ident("sidebar") {
+                                            if let syn::Lit::Bool(val) = value.lit {
+                                                sidebar = val.value;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                let field_type = match var.fields {
+                    syn::Fields::Unnamed(fields_unnamed) => {
+                        let field_names =
+                            fields_unnamed.unnamed.iter().enumerate().map(|(index, _)| {
+                                Ident::new(&format!("__field_{}", index), Span::call_site())
+                            });
+
+                        let args = field_names.clone();
+                        quote! {
+                            #enum_ident::#ident(#(#field_names),*) => {
+                                fn get_exact(a: MatcherToken) -> Option<String> {
+                                    if let MatcherToken::Exact(s) = a {
+                                        Some(s)
+                                    } else {
+                                        None
+                                    }
+                                }
+
+                                let end_path = vec![#(#args.clone(),)*];
+                                let mt = parse_str_and_optimize_tokens(#path, FieldNamingScheme::Unnamed).unwrap();
+                                let exact = mt.into_iter().find_map(get_exact).unwrap_or(String::new());
+
+                                let new_path = format!("{}{}", exact, end_path.join("/"));
+
+                                Route {
+                                    route: new_path,
+                                    state: AppRouteState {
+                                        auth: #auth,
+                                        navbar: #navbar,
+                                        sidebar: #sidebar
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    syn::Fields::Unit => quote! {
+                        #enum_ident::#ident => {
+                            Route {
+                                route: #path.to_string(),
+                                state: AppRouteState {
+                                    auth: #auth,
+                                    navbar: #navbar,
+                                    sidebar: #sidebar
+                                }
+                            }
+                        }
+                    },
+                    syn::Fields::Named(_) => {
+                        panic!("This derive is unsupported for using Named field")
+                    }
+                };
+
+                variant_checker_functions.extend(field_type);
+
+                routes.push(RouteMeta {
+                    name: ident.to_string(),
+                    path,
+                    view,
+                    auth,
+                    navbar,
+                    sidebar,
+                })
+            }
+        }
+        _ => panic!("#[derive(RouteDerive)] can only be used with enums"),
+    }
+
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
+    let expanded = quote! {
+        impl #impl_generics #enum_ident #ty_generics #where_clause {
+            pub fn get_route(&self) -> Route<AppRouteState> {
+                match self {
+                    #variant_checker_functions
+                }
+            }
+        }
+
+        impl Into<Route<AppRouteState>> for #enum_ident {
+            fn into(self) -> Route<AppRouteState> {
+                self.get_route()
+            }
+        }
+
+        impl ToString for #enum_ident {
+            fn to_string(&self) -> String {
+                self.get_route().to_string()
+            }
+        }
+    };
+
+    let tts = {
+        let mut arms = vec![];
+        let mut matchers = vec![];
+        let mut metas = vec![];
+        for route_meta in routes.into_iter() {
+            let path = route_meta.path;
+            let auth = route_meta.auth;
+            let navbar = route_meta.navbar;
+            let sidebar = route_meta.sidebar;
+            let view = Ident::new(&route_meta.view, Span::call_site());
+            arms.push(quote! {
+                #path => html!{ <views::#view/> },
+            });
+            matchers.push(quote! {
+                routes.push(RouteMatcher::new(#path, setting).unwrap());
+            });
+            metas.push(quote! {
+                meta.insert(#path.to_string(), AppRouteState {
+                    auth: #auth,
+                    navbar: #navbar,
+                    sidebar: #sidebar,
+                });
+            });
+        }
+        let match_arms = TokenStream2::from_iter(arms.into_iter());
+        let route_matchers = TokenStream2::from_iter(matchers.into_iter());
+        let route_metas = TokenStream2::from_iter(metas.into_iter());
+
+        quote! {
+            use std::collections::HashMap;
+            use yew_router_route_parser::{parse_str_and_optimize_tokens, FieldNamingScheme, MatcherToken};
+
+            impl AppRouteHandler {
+                pub fn new() -> Self {
+                    let setting = MatcherSettings::default();
+                    let except: RouteMatcher = RouteMatcher::new("/", setting).unwrap();
+                    let mut routes: Vec<RouteMatcher> = vec![];
+                    let mut meta: Box<HashMap<String, AppRouteState>> = Box::new(HashMap::new());
+
+                    #route_matchers
+                    routes = routes.into_iter().filter(|r| *r != except).collect();
+
+                    #route_metas
+
+                    AppRouteHandler {
+                        routes,
+                        meta,
+                    }
+                }
+
+                pub fn get_routes(&self) -> Vec<RouteMatcher> {
+                    self.routes.clone()
+                }
+
+                pub fn get_route_state(&self, input: &str) -> AppRouteState {
+                    let path = match route_parser::parse(input, self.routes.clone()) {
+                        Some((path, _)) => path,
+                        None => input.to_string(),
+                    };
+
+                    self.meta.get(&path).map(|m| m.clone()).unwrap_or(AppRouteState::default())
+                }
+
+                pub fn render_view(&self, input: Route<AppRouteState>) -> Html {
+                    let path = match route_parser::parse(&input, self.routes.clone()) {
+                        Some((path, _)) => path,
+                        None => input.to_string(),
+                    };
+
+                    match path.as_ref() {
+                        #match_arms
+                        _ => html! {
+                            <views::NotFound />
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    let mut token = TokenStream::from(tts);
+    token.extend(TokenStream::from(expanded));
+
+    token
 }

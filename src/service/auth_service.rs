@@ -1,9 +1,11 @@
 use reqwest_wasm::header::{HeaderMap, HeaderValue};
-use serde::Serialize;
 
-use crate::models::{AccessToken, IdPayload, Login};
+use crate::{
+    models::{AccessToken, IdPayload, Login},
+    utils,
+};
 
-use super::{ApiClient, ApiResult, LocalStorage, Result};
+use super::{ApiClient, ApiResult, Result};
 
 #[derive(Debug)]
 pub struct AuthService {
@@ -22,9 +24,8 @@ impl AuthService {
     }
 
     fn init_headers() -> HeaderMap {
-        let storage = LocalStorage::new();
-        let token = storage.get_item("access_token").unwrap_or(String::new());
-        let mut headers = ApiClient::default_headers();
+        let mut headers = HeaderMap::new();
+        let token = utils::token::get_token().unwrap_or(String::new());
         headers.insert(
             "X-Access-Token",
             HeaderValue::from_str(&token).expect("Cannot set X-Access-Token"),

@@ -1,9 +1,13 @@
 /target
 /target*
 /node_modules
+bin/
+pkg/
 /dist
+wasm-pack.log
 yarn.lock
 yarn-error.log
 Cargo.lock
 /.vscode
 /.cache
+.DS_Store

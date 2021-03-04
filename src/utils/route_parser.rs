@@ -1,6 +1,6 @@
+use crate::JsonValue;
 use serde::de::{self, Deserialize, Deserializer};
 use std::{fmt::Display, str::FromStr};
-use crate::JsonValue;
 
 use yew_router::matcher::RouteMatcher;
 use yew_router_route_parser::{CaptureVariant, MatcherToken};
@@ -58,4 +58,10 @@ pub fn parse(path: &str, routes: Vec<RouteMatcher>) -> Option<(String, JsonValue
         }
         return None;
     })
+}
+
+pub fn parse_queryst(input: &str) -> JsonValue {
+    let input = input.replace("?", "");
+
+    queryst::parse(&input).unwrap_or(serde_json::Value::Null)
 }

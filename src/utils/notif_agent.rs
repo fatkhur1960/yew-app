@@ -35,9 +35,9 @@ impl Agent for NotifAgent {
         }
     }
 
-    fn update(&mut self, msg: Self::Message) {}
+    fn update(&mut self, _msg: Self::Message) {}
 
-    fn handle_input(&mut self, msg: Self::Input, who: HandlerId) {
+    fn handle_input(&mut self, msg: Self::Input, _: HandlerId) {
         for subs in self.subscribers.iter() {
             self.link.respond(*subs, msg.clone());
         }

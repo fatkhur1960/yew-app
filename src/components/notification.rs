@@ -56,7 +56,6 @@ impl Component for Notification {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        console_log!("got {:?} msg", &msg);
         match msg {
             Msg::RemoveNotif(notif) => {
                 self.notifs = self
@@ -102,11 +101,12 @@ impl Component for Notification {
     }
 
     fn view(&self) -> Html {
+        let pos = &self.props.position;
         html! {
-            <div class=format!("notification-container {}", &self.props.position)>
+            <div class=format!("notification-container {}", &pos)>
             {
                 for self.notifs.iter().map(|child| {
-                    let classes = format!("notification box-shadow animate__animated animate__fadeInRight toast {} {}", &child.n_type, &self.props.position);
+                    let classes = format!("notification box-shadow animate__animated animate__fadeInRight toast {} {}", &child.n_type, &pos);
 
                     html!{
                         <div class=classes>
@@ -116,7 +116,7 @@ impl Component for Notification {
                                 </button>
                             </div>
                             <div class="notification-image">
-                                <img src=format!("./images/icons/{}.svg", &child.n_type)/>
+                                <img src=format!("/images/icons/{}.svg", &child.n_type)/>
                             </div>
                             <div>
                                 <p class="notification-title">{&child.title}</p>

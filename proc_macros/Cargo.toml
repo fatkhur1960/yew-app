@@ -13,9 +13,3 @@ proc-macro = true
 proc-macro2 = "1.0.24"
 syn = { version="1.0.60", features=["fold"] }
 quote = "1.0.9"
-lazy_static = "1.2"
-serde = "1.0.10"
-serde_derive = "1.0.64"
-serde_json = "1.0.19"
-heck = "0.3.1"
-factory = "0.1.2"

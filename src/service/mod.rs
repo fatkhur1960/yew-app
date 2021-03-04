@@ -5,7 +5,6 @@ use yew_services::{storage::Area, StorageService};
 
 mod api_client;
 mod auth_service;
-pub mod github_service;
 pub use self::{api_client::ApiClient, auth_service::AuthService};
 
 pub type Result<T> = std::result::Result<T, ApiError>;
