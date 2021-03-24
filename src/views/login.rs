@@ -46,7 +46,7 @@ impl Component for LoginView {
         document().set_title("Racta - Login");
 
         if first_render && token::is_authenticated() {
-            redirect!("/");
+            redirect!("/dashboard");
         }
     }
 

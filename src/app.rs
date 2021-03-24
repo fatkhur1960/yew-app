@@ -1,5 +1,6 @@
 use crate::{
-    components::{Notification, RouterLink},
+    components::Notification,
+    components::{NavItem, Navbar},
     routes::{AppRouteState, RouterAgent},
     utils::token,
 };
@@ -41,7 +42,7 @@ impl Component for AppView {
                 let next = route.to_string();
                 self.state = route.state;
 
-                token::auth_middleware(self.state.auth, "/login", Some(next));
+                token::auth_middleware(self.state.auth, "/", Some(next));
 
                 true
             }
@@ -56,27 +57,10 @@ impl Component for AppView {
         html! {
             <div class="wrapper">
                 <Notification />
-                {
-                    if self.state.navbar {
-                        html! {
-                            <navbar class="navbar navbar-expand-md fixed-top navbar-dark bg-dark">
-                                <div class="container">
-                                    <RouterLink class="navbar-brand" to=AppRoute::Dashboard>{"Cover"}</RouterLink>
-                                    <div class="navbar-collapse offcanvas-collapse" id="navbarsExampleDefault">
-                                        <ul class="navbar-nav ml-auto">
-                                            <li class="nav-item">
-                                                <RouterLink class="nav-link" to=AppRoute::Dashboard>{"Home"}</RouterLink>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </navbar>
-                        }
-                    } else {
-                        html! {}
-                    }
-                }
-                <RouterView default_route=AppRoute::Dashboard/>
+                <Navbar title="Racta" show=self.state.navbar>
+                    <NavItem to=AppRoute::Dashboard("".into()) title="Dashboard"/>
+                </Navbar>
+                <RouterView default_route=AppRoute::Dashboard("".into())/>
             </div>
         }
     }

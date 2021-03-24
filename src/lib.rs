@@ -32,7 +32,7 @@ mod utils;
 mod views;
 
 pub use self::components::*;
-pub use router::AppRoute;
+pub use router::{AppRoute, DashboardRoute};
 
 lazy_static! {
     static ref PUBLIC_URL: &'static str = "https://api.racta.dev.ansvia.com";

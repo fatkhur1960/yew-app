@@ -1,9 +1,15 @@
 pub mod forms;
+mod nav_item;
+mod navbar;
 mod notification;
+mod sidebar;
 pub mod router_link;
 pub mod router_view;
 
-pub use self::{notification::Notification, router_link::RouterLink};
+pub use self::{
+    nav_item::NavItem, navbar::Navbar, notification::Notification, router_link::RouterLink,
+    sidebar::{Sidebar, SidebarItem},
+};
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Notify {
@@ -17,7 +23,7 @@ impl Notify {
         Self {
             title: String::from("Success"),
             description,
-            n_type: String::from("success")
+            n_type: String::from("success"),
         }
     }
 
@@ -25,7 +31,7 @@ impl Notify {
         Self {
             title: String::from("Info"),
             description,
-            n_type: String::from("info")
+            n_type: String::from("info"),
         }
     }
 
@@ -33,7 +39,7 @@ impl Notify {
         Self {
             title: String::from("Warning"),
             description,
-            n_type: String::from("warning")
+            n_type: String::from("warning"),
         }
     }
 
@@ -41,7 +47,7 @@ impl Notify {
         Self {
             title: String::from("Error"),
             description,
-            n_type: String::from("error")
+            n_type: String::from("error"),
         }
     }
 }

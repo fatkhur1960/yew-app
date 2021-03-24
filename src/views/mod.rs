@@ -1,10 +1,20 @@
-mod not_found;
 mod dashboard;
-mod contact_view;
+mod dashboard_main;
 mod login;
+mod not_found;
+mod project;
 mod register;
+mod task;
+mod todo;
+
+use yew::Html;
+use yew_router::prelude::Route;
 
 pub use self::{
-    not_found::NotFound, dashboard::DashboardView, contact_view::ContactView, login::LoginView,
-    register::RegisterView,
+    dashboard::DashboardView, dashboard_main::DashboardMain, login::LoginView, not_found::NotFound,
+    project::ProjectView, register::RegisterView, task::TaskView, todo::TodoView,
 };
+
+pub trait RenderView {
+    fn render_view(route: Route, not_found: Html) -> Html;
+}

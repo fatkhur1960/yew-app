@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
+use crate::JsonValue;
+
 #[doc(hidden)]
 #[derive(Serialize, Debug, Clone)]
 pub struct IdPayload {
@@ -39,4 +41,27 @@ pub struct AccessToken {
     pub account_id: i64,
     pub created: String,
     pub valid_thru: String,
+}
+
+#[doc(hidden)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Account {
+    pub id: i64,
+    pub full_name: String,
+    pub nickname: String,
+    pub email: String,
+    pub phone_num: String,
+    pub active: bool,
+    pub roles: Vec<String>,
+    pub level: i32,
+    pub points: i32,
+    pub labels: Vec<String>,
+    pub register_time: String,
+    pub pic: String,
+    pub accesses: Vec<String>,
+    pub level_title: String,
+    pub roles_details: Option<JsonValue>,
+    pub points_history: Option<JsonValue>,
+    pub last_login: Option<String>,
+    pub is_admin: bool,
 }

@@ -27,7 +27,7 @@ impl ApiClient {
             .default_headers(headers.clone())
             .build()
             .expect("Cannot rebuild Client");
-        
+
         ApiClient {
             client,
             scope: self.scope.to_owned(),

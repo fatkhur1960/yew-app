@@ -5,7 +5,8 @@ use yew_services::{storage::Area, StorageService};
 
 mod api_client;
 mod auth_service;
-pub use self::{api_client::ApiClient, auth_service::AuthService};
+mod account;
+pub use self::{api_client::ApiClient, auth_service::AuthService, account::AccountService};
 
 pub type Result<T> = std::result::Result<T, ApiError>;
 

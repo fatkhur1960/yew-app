@@ -4,11 +4,11 @@ use crate::routes::{AppRouteHandler, AppRouteState};
 use crate::{utils::route_parser, views};
 use yew::{html, Html};
 use yew_router::matcher::{MatcherSettings, RouteMatcher};
-use yew_router::prelude::Route;
+use yew_router::prelude::{Route, Switch};
 
-#[derive(RouteDerive, Clone, Debug)]
+#[derive(RouteDerive, Clone, Debug, PartialEq)]
 pub enum AppRoute {
-    #[params(path = "/login", view = "LoginView", navbar = false, sidebar = false)]
+    #[params(path = "/", view = "LoginView", navbar = false, sidebar = false)]
     Login,
     #[params(
         path = "/register",
@@ -24,8 +24,22 @@ pub enum AppRoute {
         sidebar = false
     )]
     ResetPassword,
-    #[params(path = "/", view = "DashboardView", auth = true)]
-    Dashboard,
-    #[params(path = "/project/{name}", view = "ContactView", auth = true)]
-    Project(String),
+    #[params(path = "/dashboard{*:inner}", view = "DashboardView", auth = true)]
+    Dashboard(String)
+}
+
+#[derive(Switch, RouteChild, Clone, Debug, PartialEq)]
+pub enum DashboardRoute {
+    #[to = ""]
+    #[view(DashboardMain)]
+    None,
+    #[to = "/tasks"]
+    #[view(TaskView)]
+    Task,
+    #[to = "/projects"]
+    #[view(ProjectView)]
+    Project,
+    #[to = "/todos"]
+    #[view(TodoView)]
+    Todo,
 }

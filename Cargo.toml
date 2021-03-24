@@ -13,16 +13,37 @@ crate-type = ["cdylib", "rlib"]
 yew-router = { git = "https://github.com/yewstack/yew", branch="master" }
 yew-router-route-parser = { git = "https://github.com/yewstack/yew", branch="master" }
 yew-services = { git = "https://github.com/yewstack/yew", branch = "master" }
-yewtil = { git = "https://github.com/yewstack/yew", branch="master", features = ["lrc"] }
+yewtil = { git = "https://github.com/yewstack/yew", branch="master" }
 yew = { git = "https://github.com/yewstack/yew", branch = "master" }
 
 wasm-bindgen = "0.2.67"
-serde_json = "1.0"
-serde = { version = "1.0", features = [ "derive" ] }
-lazy_static = "1.4.0"
-reqwest-wasm = { version = "0.11", features = ["json"] }
-validator = { version = "0.12", features = ["derive"] }
-proc_macros = { path = "./proc_macros" }
+
+[dependencies.serde_json]
+version = "1.0"
+default-features = false
+
+[dependencies.serde]
+version = "1.0"
+default-features = false
+features = ["derive"]
+
+[dependencies.validator]
+version = "0.12"
+default-features = false
+features = ["derive"]
+
+[dependencies.reqwest-wasm]
+version = "0.11"
+default-features = false
+features = ["json"]
+
+[dependencies.proc_macros]
+path = "./proc_macros"
+default-features = false
+
+[dependencies.lazy_static]
+version = "1.4.0"
+default-features = false
 
 [dependencies.queryst]
 version = "2.1.0"

@@ -1,31 +1,21 @@
-use serde::{Deserialize, Serialize};
 use yew::{prelude::*, utils::document};
 
-#[derive(Params, Default, Serialize, Deserialize)]
-struct NameParam {
-    pub name: String,
-}
-
-pub struct ContactView {
+pub struct ProjectView {
     _link: ComponentLink<Self>,
-    params: NameParam,
 }
 
 pub enum Msg {}
 
-impl Component for ContactView {
+impl Component for ProjectView {
     type Message = Msg;
     type Properties = ();
 
     fn rendered(&mut self, _first_render: bool) {
-        document().set_title(&format!("Project - {}", self.params.name))
+        document().set_title("Racta - Project")
     }
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self {
-            _link: link,
-            params: NameParam::new(),
-        }
+        Self { _link: link }
     }
 
     fn update(&mut self, _msg: Self::Message) -> ShouldRender {
@@ -38,7 +28,7 @@ impl Component for ContactView {
 
     fn view(&self) -> Html {
         html! {
-            <h1>{"Project: "} { self.params.name.clone() } </h1>
+            <h1>{"Project Page"}</h1>
         }
     }
 }

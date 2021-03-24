@@ -62,8 +62,7 @@ pub fn parse_params(input: TokenStream) -> TokenStream {
 
         impl #name {
             pub fn new() -> Self {
-                let param: #name = serde_json::from_value(Self::parsed_params()).unwrap();
-                param
+                serde_json::from_value::<#name>(Self::parsed_params()).unwrap_or(#name::default())
             }
 
             /// get current path params
@@ -311,6 +310,20 @@ pub fn derive_route(input: TokenStream) -> TokenStream {
                     #variant_checker_functions
                 }
             }
+
+            pub fn clear(&self) -> String {
+                let path = self.get_route().to_string();
+                let get_exact = |a: MatcherToken| {
+                    if let MatcherToken::Exact(s) = a {
+                        Some(s)
+                    } else {
+                        None
+                    }
+                };
+
+                let mt = parse_str_and_optimize_tokens(&path, FieldNamingScheme::Unnamed).unwrap();
+                mt.into_iter().find_map(get_exact).unwrap_or(String::new())
+            }
         }
 
         impl Into<Route<AppRouteState>> for #enum_ident {
@@ -410,4 +423,83 @@ pub fn derive_route(input: TokenStream) -> TokenStream {
     token.extend(TokenStream::from(expanded));
 
     token
+}
+
+
+#[proc_macro_derive(RouteChild, attributes(to, view))]
+pub fn route_child(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let enum_ident = input.ident;
+
+    // let mut variant_checker_functions = TokenStream2::new();
+    let mut childs: Vec<(String, String)> = Vec::new();
+    match input.data {
+        syn::Data::Enum(DataEnum { variants, .. }) => {
+            for var in variants.into_iter() {
+                let (mut to, mut view) = (String::new(), String::new());
+
+                if let Some(attr) = var.attrs.iter().find(|a| a.path.is_ident("to")) {
+                    let parsed_meta = attr.parse_meta().unwrap();
+                    if let syn::Meta::NameValue(value) = parsed_meta {
+                        if value.path.is_ident("to") {
+                            if let syn::Lit::Str(val) = value.lit {
+                                to = val.value();
+                            }
+                        } 
+                    }
+                }
+                if let Some(attr) = var.attrs.iter().find(|a| a.path.is_ident("view")) {
+                    let parsed_meta = attr.parse_meta().unwrap();
+                    if let syn::Meta::List(list) = parsed_meta {
+                        if list.path.is_ident("view") {
+                            for item in list.nested {
+                                if let syn::NestedMeta::Meta(meta) = item {
+                                    if let syn::Meta::Path(path) = meta {
+                                        for s in path.segments {
+                                            view = s.ident.to_string();
+                                        }
+                                    }
+                                }
+                            }
+                        } 
+                    }
+                }
+
+                childs.push((to, view));
+            }
+        }
+        _ => ()
+    }
+
+    let match_arms = {
+        let mut arms = vec![];
+        for (to, view) in childs {
+            let view = Ident::new(&view, Span::call_site());
+            arms.push(quote! {
+                #to => html! {
+                    <views::#view/>
+                },
+            });
+        }
+
+        TokenStream2::from_iter(arms)
+    };
+
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
+    let expanded = quote! {
+
+        impl #impl_generics views::RenderView for #enum_ident #ty_generics #where_clause {
+
+            fn render_view(route: Route, not_found: Html) -> Html {
+                let route = route.to_string();
+                match &route[..] {
+                    #match_arms
+                    _ => not_found
+                }
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
 }
